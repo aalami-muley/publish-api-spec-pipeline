@@ -15,6 +15,9 @@ env:
   ORGANIZATION_ID: f60b1434-1059-4f0f-a28c-ccf4a9be05b2
   OWNER_ID: 612cf2dd-9f92-4a08-97ed-f6be4faf06ca
   CLASSIFIER: raml
+  SUBTYPE: 
+  BRANCH: master
+  REQUEST_ORIGIN: "GitHub Pipeline"
 
 jobs:
   import_to_design_center:
@@ -25,31 +28,48 @@ jobs:
 
       - name: Fetch all projects
         run: |
+          curl -s --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' -o projects.json
+
+      - name: Check if the project is already created
+        run: echo "PROJECT_ID=$(cat projects.json | jq '.[] | select(.name == "${{github.event.repository.name}}")' | jq -r .id)" >> $GITHUB_ENV
+          
+      - name: Create the project
+        shell: bash
+        run: |
+          if [ "$MULTI_LINE_ARG" == "" ]; then
+            echo "PROJECT_ID=$(curl -s --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '{ "name": "${{github.event.repository.name}}", "classifier": "${{env.CLASSIFIER}}", "subType": "${{env.SUBTYPE}}" }' | jq -r .id)" >> $GITHUB_ENV
+          fi
+        env:
+          PROJECT_ID: ${{ env.PROJECT_ID}}
+
+      - name: Acquire a lock
+        run: |
           curl -s \
-          --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects \
+          -X POST \
+          --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{BRANCH}}/acquireLock \
           --compressed \
           -H 'Authorization: Bearer ${{env.TOKEN}}' \
           -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' \
           -H 'Accept: application/json' \
-          -H 'x-origin: GitHub Piepline' \
+          -H 'x-origin: ${{env.REQUEST_ORIGIN}}' \
           -H 'Content-Type: application/json' \
-          -o projects.json
-
-      - name: Check if the project is already created
-        run: echo "PROJECT_ID=$(cat projects.json | jq '.[] | select(.name == "${{github.repository}}")' | jq -r .id)" >> $GITHUB_ENV
-          
-      - name: Create the project
-        run: echo Hello, world!
-        if: ${{ env.PROJECT_ID }}
-
-      - name: Acquire a lock
-        run: echo Hello, world!
+          --data-binary '{}'
 
       - name: Add the main specification file
         run: echo Hello, world!
 
       - name: Release the lock
-        run: echo Hello, world!
+        run: |
+          curl -s \
+          -X POST \
+          --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{BRANCH}}/releaseLock \
+          --compressed \
+          -H 'Authorization: Bearer ${{env.TOKEN}}' \
+          -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' \
+          -H 'Accept: application/json' \
+          -H 'x-origin: ${{env.REQUEST_ORIGIN}}' \
+          -H 'Content-Type: application/json' \
+          --data-binary '{}'
 
   publish_to_exchange:
     runs-on: ubuntu-latest
