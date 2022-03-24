@@ -18,6 +18,7 @@ env:
   SUBTYPE: 
   BRANCH: master
   REQUEST_ORIGIN: "GitHub Pipeline"
+  SPEC: publish-api-spec-pipeline.raml
 
 jobs:
   import_to_design_center:
@@ -44,41 +45,35 @@ jobs:
 
       - name: Acquire a lock
         run: |
-          curl -s \
-          -X POST \
-          --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/acquireLock \
-          --compressed \
-          -H 'Authorization: Bearer ${{env.TOKEN}}' \
-          -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' \
-          -H 'Accept: application/json' \
-          -H 'x-origin: ${{env.REQUEST_ORIGIN}}' \
-          -H 'Content-Type: application/json' \
-          --data-binary '{}'
+          curl -s -X POST --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/acquireLock --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '{}'
 
+      
+      - name: Read specifications file
+        run: echo "SPEC_CONTENT=$(cat ${{ github.workspace }}/${{env.SPEC}}.${{env.CLASSIFIER}})" >> $GITHUB_ENV
+      
       - name: Add the main specification file
-        run: echo Hello, world!
+        run: |
+          curl -s -X POST --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.branch}}/save?commit=true&message=CommitedByPipeline \
+          --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' \
+          --data-binary '[{"path": `${{env.SPEC}}`, "type": "FILE", "content": "${{env.SPEC_CONTENT}}"}, {"path": "exchange.json", "type": "FILE", "content": "{\"dependencies\":[],\"main\":\"${{env.SPEC}}\"}"}]'
 
       - name: Release the lock
         run: |
-          curl -s \
-          -X POST \
-          --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/releaseLock \
-          --compressed \
-          -H 'Authorization: Bearer ${{env.TOKEN}}' \
-          -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' \
-          -H 'Accept: application/json' \
-          -H 'x-origin: ${{env.REQUEST_ORIGIN}}' \
-          -H 'Content-Type: application/json' \
-          --data-binary '{}'
+          curl -s -X POST --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/releaseLock --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '{}'
 
   publish_to_exchange:
     runs-on: ubuntu-latest
+    needs: import_to_design_center
     
     steps:
       - uses: actions/checkout@v2
-      
+
+      - name: Fetch all projects
+        run: |
+          curl -s --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' -o projects.json
+
       - name: Check if the project is already created
-        run: echo Hello, world!
+        run: echo "PROJECT_ID=$(cat projects.json | jq '.[] | select(.name == "${{github.event.repository.name}}")' | jq -r .id)" >> $GITHUB_ENV
         
       - name: Publish the Exchange
         run: echo Hello, world!
