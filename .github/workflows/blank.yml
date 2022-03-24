@@ -24,7 +24,16 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Fetch all projects
-        run: curl https://google.com
+        run: |
+          curl -s \
+          --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects \
+          --compressed \
+          -H 'Authorization: Bearer ${{env.TOKEN}}' \
+          -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' \
+          -H 'Accept: application/json' \
+          -H 'x-origin: GitHub Piepline' \
+          -H 'Content-Type: application/json' \
+          -o projects.json
 
       - name: Check if the project is already created
         run: |
