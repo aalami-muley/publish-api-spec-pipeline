@@ -10,21 +10,21 @@ on:
 
   workflow_dispatch:
 
+env:
+  TOKEN: b6eaaaa1-4a10-4b05-b698-ec444674596d
+  ORGANIZATION_ID: f60b1434-1059-4f0f-a28c-ccf4a9be05b2
+  OWNER_ID: 612cf2dd-9f92-4a08-97ed-f6be4faf06ca
+  CLASSIFIER: raml
+
 jobs:
   import_to_design_center:
     runs-on: ubuntu-latest
-
-    env:
-      TOKEN: b6eaaaa1-4a10-4b05-b698-ec444674596d
-      ORGANIZATION_ID: f60b1434-1059-4f0f-a28c-ccf4a9be05b2
-      OWNER_ID: 612cf2dd-9f92-4a08-97ed-f6be4faf06ca
-      CLASSIFIER: raml
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Fetch all projects
-        run: 'curl -s https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects --compressed -H "Authorization: Bearer ${{TOKEN}}" -H "x-organization-id: ${{ORGANIZATION_ID}}" "x-owner-id: ${{OWNER_ID}}" -H "Accept: application/json" -H "x-origin: GitHub Piepline" -H "Content-Type: application/json" -H "Accept-Encoding: gzip, deflate, br" -o projects.json'
+        run: 'curl -s https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects --compressed -H "Authorization: Bearer ${{env.TOKEN}}" -H "x-organization-id: ${{env.ORGANIZATION_ID}}" "x-owner-id: ${{env.OWNER_ID}}" -H "Accept: application/json" -H "x-origin: GitHub Piepline" -H "Content-Type: application/json" -H "Accept-Encoding: gzip, deflate, br" -o projects.json'
 
       - name: Check if the project is already created
         run: |
