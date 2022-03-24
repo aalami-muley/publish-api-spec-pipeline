@@ -36,12 +36,11 @@ jobs:
           -o projects.json
 
       - name: Check if the project is already created
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+        run: echo "PROJECT_ID=$(cat projects.json | jq '.[] | select(.name == "${{github.repository}}")' | jq -r .id)" >> $GITHUB_ENV
           
       - name: Create the project
         run: echo Hello, world!
+        if: ${{ env.PROJECT_ID }}
 
       - name: Acquire a lock
         run: echo Hello, world!
