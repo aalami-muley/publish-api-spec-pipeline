@@ -53,9 +53,7 @@ jobs:
       
       - name: Add the main specification file
         run: |
-          curl -s -X POST --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.branch}}/save?commit=true&message=CommitedByPipeline \
-          --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' \
-          --data-binary '[{"path": `${{env.SPEC}}`, "type": "FILE", "content": "${{env.SPEC_CONTENT}}"}, {"path": "exchange.json", "type": "FILE", "content": "{\"dependencies\":[],\"main\":\"${{env.SPEC}}\"}"}]'
+          curl -s -X POST --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.branch}}/save?commit=true&message=CommitedByPipeline --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '[{"path": `${{env.SPEC}}`, "type": "FILE", "content": "${{env.SPEC_CONTENT}}"}, {"path": "exchange.json", "type": "FILE", "content": "{\"dependencies\":[],\"main\":\"${{env.SPEC}}\"}"}]'
 
       - name: Release the lock
         run: |
