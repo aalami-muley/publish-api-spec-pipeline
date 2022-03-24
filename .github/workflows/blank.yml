@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Fetch all projects
-        run: 'curl -s https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects --compressed -H "Authorization: Bearer $TOKEN" -H "x-organization-id: $ORGANIZATION_ID" "x-owner-id: $OWNER_ID" -H "Accept: application/json" -H "x-origin: GitHub Piepline" -H "Content-Type: application/json" -H "Accept-Encoding: gzip, deflate, br" -o projects.json'
+        run: 'curl -s https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects --compressed -H "Authorization: Bearer ${{TOKEN}}" -H "x-organization-id: ${{ORGANIZATION_ID}}" "x-owner-id: ${{OWNER_ID}}" -H "Accept: application/json" -H "x-origin: GitHub Piepline" -H "Content-Type: application/json" -H "Accept-Encoding: gzip, deflate, br" -o projects.json'
 
       - name: Check if the project is already created
         run: |
