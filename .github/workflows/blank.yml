@@ -46,7 +46,7 @@ jobs:
         run: |
           curl -s \
           -X POST \
-          --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{BRANCH}}/acquireLock \
+          --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/acquireLock \
           --compressed \
           -H 'Authorization: Bearer ${{env.TOKEN}}' \
           -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' \
