@@ -58,7 +58,7 @@ jobs:
       
       - name: Encode specifications file
         id: getJsonEncodedSpecification
-        run: echo "::set-output name=SPEC_ENCODED_CONTENT::${{fromJson(steps.getSpecificationContent.outputs.SPEC_CONTENT)}}"
+        run: echo "::set-output name=SPEC_ENCODED_CONTENT::${{toJson(steps.getSpecificationContent.outputs.SPEC_CONTENT)}}"
 
       - name: Add the main specification file
         run: |
