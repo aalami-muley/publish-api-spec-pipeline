@@ -54,7 +54,7 @@ jobs:
       
       - name: Get specifications file
         id: getSpecificationContent
-        run: echo "::set-output name=SPEC_CONTENT::$(cat  ${{ github.workspace }}/${{env.SPEC}}))"
+        run: echo "::set-output name=SPEC_CONTENT::${{fromJson($(cat ${{ github.workspace }}/${{env.SPEC}})))"
       
       - name: Add the main specification file
         run: |
