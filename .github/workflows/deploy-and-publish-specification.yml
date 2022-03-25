@@ -89,7 +89,7 @@ jobs:
  
       - name: Publish API to Exchange
         run: |
-          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/publish/exchange --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '{ "name": "${{env.PROJECT_NAME}}", "apiVersion": "${{env.API_VERSION}}", "version": "${{env.VERSION}}", "main": "${{env.PROJECT_NAME}}.raml", "classifier": "${{env.CLASSIFIER}}", "assetId": ${{env.PROJECT_NAME}}, "groupId": "${{env.ORGANIZATION_ID}}" }'
+          curl -s -X POST --url "${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/publish/exchange" --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '{ "name": "${{env.PROJECT_NAME}}", "apiVersion": "${{env.API_VERSION}}", "version": "${{env.VERSION}}", "main": "${{env.PROJECT_NAME}}.raml", "classifier": "${{env.CLASSIFIER}}", "assetId": ${{env.PROJECT_NAME}}, "groupId": "${{env.ORGANIZATION_ID}}" }'
 
       - name: Release the lock
         run: |
