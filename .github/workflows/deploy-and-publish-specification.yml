@@ -32,7 +32,7 @@ jobs:
 
       - name: Fetch all projects
         run: |
-          curl -s --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}} --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' -o projects.json
+          curl -s --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}} --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' -o projects.json
 
       - name: Check if the project is already created
         run: echo "PROJECT_ID=$(cat projects.json | jq '.[] | select(.name == "${{github.event.repository.name}}")' | jq -r .id)" >> $GITHUB_ENV
