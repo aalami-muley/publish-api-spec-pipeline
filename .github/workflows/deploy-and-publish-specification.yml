@@ -32,7 +32,7 @@ jobs:
 
       - name: Fetch all projects
         run: |
-          curl -s --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}} --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: $REQUEST_ORIGIN' -H 'Content-Type: application/json' -o projects.json
+          curl -s --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}} --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' -o projects.json
 
       - name: Check if the project is already created
         run: echo "PROJECT_ID=$(cat projects.json | jq '.[] | select(.name == "${{github.event.repository.name}}")' | jq -r .id)" >> $GITHUB_ENV
@@ -41,14 +41,14 @@ jobs:
         shell: bash
         run: |
           if [ "$PROJECT_ID" == "" ]; then
-            echo "PROJECT_ID=$(curl -s --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}} --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: $REQUEST_ORIGIN' -H 'Content-Type: application/json' --data-binary '{ "name": "${{github.event.repository.name}}", "classifier": "${{env.CLASSIFIER}}", "subType": "${{env.SUBTYPE}}" }' | jq -r .id)" >> $GITHUB_ENV
+            echo "PROJECT_ID=$(curl -s --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}} --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '{ "name": "${{github.event.repository.name}}", "classifier": "${{env.CLASSIFIER}}", "subType": "${{env.SUBTYPE}}" }' | jq -r .id)" >> $GITHUB_ENV
           fi
         env:
           PROJECT_ID: ${{ env.PROJECT_ID}}
 
       - name: Acquire a lock
         run: |
-          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/acquireLock --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: $REQUEST_ORIGIN' -H 'Content-Type: application/json' --data-binary '{}'
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/acquireLock --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '{}'
       
       - name: Get specifications file
         id: getSpecificationContent
@@ -65,11 +65,11 @@ jobs:
 
       - name: Add the main specification file
         run: |
-          curl -s -X POST --url "${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/save?commit=true&message=CommitedByPipeline" --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: $REQUEST_ORIGIN' -H 'Content-Type: application/json' --data-binary '[{"path": "${{env.SPEC}}", "type": "FILE", "content": ${{toJSON(steps.getSpecificationContent.outputs.SPEC_CONTENT)}}}, {"path": "exchange.json", "type": "FILE", "content": "{\"dependencies\":[],\"main\":\"${{env.SPEC}}\"}"}]'
+          curl -s -X POST --url "${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/save?commit=true&message=CommitedByPipeline" --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '[{"path": "${{env.SPEC}}", "type": "FILE", "content": ${{toJSON(steps.getSpecificationContent.outputs.SPEC_CONTENT)}}}, {"path": "exchange.json", "type": "FILE", "content": "{\"dependencies\":[],\"main\":\"${{env.SPEC}}\"}"}]'
 
       - name: Release the lock
         run: |
-          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/releaseLock --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: $REQUEST_ORIGIN' -H 'Content-Type: application/json' --data-binary '{}'
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/releaseLock --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '{}'
 
   publish_to_exchange:
     runs-on: ubuntu-latest
@@ -78,19 +78,19 @@ jobs:
     steps:
       - name: Fetch all projects
         run: |
-          curl -s --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}} --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: $REQUEST_ORIGIN' -H 'Content-Type: application/json' -o projects.json
+          curl -s --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}} --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' -o projects.json
 
       - name: Check if the project is already created
         run: echo "PROJECT_ID=$(cat projects.json | jq '.[] | select(.name == "${{github.event.repository.name}}")' | jq -r .id)" >> $GITHUB_ENV
 
       - name: Acquire a lock
         run: |
-          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/acquireLock --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: $REQUEST_ORIGIN' -H 'Content-Type: application/json' --data-binary '{}'
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/acquireLock --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '{}'
  
       - name: Publish API to Exchange
         run: |
-          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/publish/exchange --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: $REQUEST_ORIGIN' -H 'Content-Type: application/json' --data-binary '{ "name": "${{env.PROJECT_NAME}}", "apiVersion": "${{env.API_VERSION}}", "version": "${{env.VERSION}}", "main": "${{env.PROJECT_NAME}}.raml", "classifier": "${{env.CLASSIFIER}}", "assetId": ${{env.PROJECT_NAME}}, "groupId": "${{env.ORGANIZATION_ID}}" }'
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/publish/exchange --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '{ "name": "${{env.PROJECT_NAME}}", "apiVersion": "${{env.API_VERSION}}", "version": "${{env.VERSION}}", "main": "${{env.PROJECT_NAME}}.raml", "classifier": "${{env.CLASSIFIER}}", "assetId": ${{env.PROJECT_NAME}}, "groupId": "${{env.ORGANIZATION_ID}}" }'
 
       - name: Release the lock
         run: |
-          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/releaseLock --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: $REQUEST_ORIGIN' -H 'Content-Type: application/json' --data-binary '{}'
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/releaseLock --compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '{}'
