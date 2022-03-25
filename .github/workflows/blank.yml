@@ -20,6 +20,12 @@ env:
   REQUEST_ORIGIN: "GitHub Pipeline"
   SPEC: publish-api-spec-pipeline.raml
 
+  PROJECT_NAME: ${{github.event.repository.name}}
+
+  CURL_BASE_URL: https://eu1.anypoint.mulesoft.com
+  CURL_HEADERS: "-H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json'"
+  CURL_OPTIONS: --compressed ${{env.CURL_HEADERS}}
+
 jobs:
   import_to_design_center:
     runs-on: ubuntu-latest
@@ -46,7 +52,6 @@ jobs:
       - name: Acquire a lock
         run: |
           curl -s -X POST --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/acquireLock --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '{}'
-
       
       - name: Read specifications file
         run: echo "SPEC_CONTENT=$(cat ${{ github.workspace }}/${{env.SPEC}})" >> $GITHUB_ENV
@@ -68,10 +73,19 @@ jobs:
 
       - name: Fetch all projects
         run: |
-          curl -s --url https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' -o projects.json
+          curl -s --url ${{env.CURL_BASE_URL}}/designcenter/api-designer/projects ${{env.CURL_OPTIONS}} -o projects.json
 
       - name: Check if the project is already created
         run: echo "PROJECT_ID=$(cat projects.json | jq '.[] | select(.name == "${{github.event.repository.name}}")' | jq -r .id)" >> $GITHUB_ENV
-        
-      - name: Publish the Exchange
-        run: echo Hello, world!
+
+      - name: Acquire a lock
+        run: |
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/acquireLock ${{env.CURL_OPTIONS}} --data-binary '{}'
+ 
+      - name: Publish API to Exchange
+        run: |
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/designcenter/api-designer//projects/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/publish/exchange ${{env.CURL_OPTIONS}} --data-binary '{ "name": "${{env.PROJECT_NAME}}", "apiVersion": "${{env.API_VERSION}}", "version": "${{env.VERSION}}", "main": "${{env.API_VERSION}}.raml", "classifier": "${{env.CLASSIFIER}}", "assetId": ${{env.PROJECT_NAME}}, "groupId": "${{env.ORGANIZATION_ID}}" }'
+
+      - name: Release the lock
+        run: |
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/releaseLock ${{env.CURL_OPTIONS}} --data-binary '{}'
