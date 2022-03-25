@@ -54,11 +54,15 @@ jobs:
       
       - name: Get specifications file
         id: getSpecificationContent
-        run: echo "::set-output name=SPEC_CONTENT::${{fromJson($(cat ${{ github.workspace }}/${{env.SPEC}})))"
+        run: echo "::set-output name=SPEC_CONTENT::$(cat ${{ github.workspace }}/${{env.SPEC}}))"
       
+      - name: Encode specifications file
+        id: getJsonEncodedSpecification
+        run: echo "::set-output name=SPEC_ENCODED_CONTENT::${{fromJson(steps.getSpecificationContent.outputs.SPEC_CONTENT)}}"
+
       - name: Add the main specification file
         run: |
-          curl -s -X POST --url "https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/save?commit=true&message=CommitedByPipeline" --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '[{"path": "${{env.SPEC}}", "type": "FILE", "content": "${{steps.getSpecificationContent.outputs.SPEC_CONTENT}}"}, {"path": "exchange.json", "type": "FILE", "content": "{\"dependencies\":[],\"main\":\"${{env.SPEC}}\"}"}]'
+          curl -s -X POST --url "https://eu1.anypoint.mulesoft.com/designcenter/api-designer/projects/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/save?commit=true&message=CommitedByPipeline" --compressed -H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{env.ORGANIZATION_ID}}' -H 'x-owner-id: ${{env.OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{env.REQUEST_ORIGIN}}' -H 'Content-Type: application/json' --data-binary '[{"path": "${{env.SPEC}}", "type": "FILE", "content": "${{steps.getJsonEncodedSpecification.outputs.SPEC_ENCODED_CONTENT}}"}, {"path": "exchange.json", "type": "FILE", "content": "{\"dependencies\":[],\"main\":\"${{env.SPEC}}\"}"}]'
 
       - name: Release the lock
         run: |
