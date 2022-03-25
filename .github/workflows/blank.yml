@@ -55,7 +55,7 @@ jobs:
       - name: Get specifications file
         id: getSpecificationContent
         run: |
-          SPEC_CONTENT=$(cat ${{ github.workspace }}/${{env.SPEC}}))
+          SPEC_CONTENT=$(cat ${{ github.workspace }}/${{env.SPEC}})
           SPEC_CONTENT="${SPEC_CONTENT//'%'/'%25'}"
           SPEC_CONTENT="${SPEC_CONTENT//$'\n'/'%0A'}"
           SPEC_CONTENT="${SPEC_CONTENT//$'\r'/'%0D'}"
