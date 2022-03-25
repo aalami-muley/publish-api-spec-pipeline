@@ -23,8 +23,7 @@ env:
   PROJECT_NAME: ${{github.event.repository.name}}
 
   CURL_BASE_URL: https://eu1.anypoint.mulesoft.com
-  CURL_HEADERS: "-H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: REQUEST_ORIGIN' -H 'Content-Type: application/json'"
-  CURL_OPTIONS: --compressed $CURL_HEADERS
+  CURL_OPTIONS: "--compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: REQUEST_ORIGIN' -H 'Content-Type: application/json'"
 
 jobs:
   import_to_design_center:
@@ -74,7 +73,7 @@ jobs:
 
       - name: Fetch all projects
         run: |
-          curl -s --url ${{env.CURL_BASE_URL}}/designcenter/api-designer/projects ${{env.CURL_OPTIONS}} -o projects.json
+          curl -s --url $CURL_BASE_URL/designcenter/api-designer/projects $CURL_OPTIONS -o projects.json
 
       - name: Check if the project is already created
         run: echo "PROJECT_ID=$(cat projects.json | jq '.[] | select(.name == "${{github.event.repository.name}}")' | jq -r .id)" >> $GITHUB_ENV
