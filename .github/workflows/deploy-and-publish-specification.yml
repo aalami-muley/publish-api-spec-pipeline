@@ -23,6 +23,9 @@ env:
   CURL_BASE_URL: https://eu1.anypoint.mulesoft.com
   CURL_URI: designcenter/api-designer/projects
 
+  API_VERSION: 0.1
+  VERSION: 1.0.0
+
 jobs:
   import_to_design_center:
     runs-on: ubuntu-latest
