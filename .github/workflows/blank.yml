@@ -23,8 +23,8 @@ env:
   PROJECT_NAME: ${{github.event.repository.name}}
 
   CURL_BASE_URL: https://eu1.anypoint.mulesoft.com
-  CURL_HEADERS: "-H 'Authorization: Bearer ${{env.TOKEN}}' -H 'x-organization-id: ${{ORGANIZATION_ID}}' -H 'x-owner-id: ${{OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{REQUEST_ORIGIN}}' -H 'Content-Type: application/json'"
-  CURL_OPTIONS: --compressed ${{env.CURL_HEADERS}}
+  CURL_HEADERS: "-H 'Authorization: Bearer ${{TOKEN}}' -H 'x-organization-id: ${{ORGANIZATION_ID}}' -H 'x-owner-id: ${{OWNER_ID}}' -H 'Accept: application/json' -H 'x-origin: ${{REQUEST_ORIGIN}}' -H 'Content-Type: application/json'"
+  CURL_OPTIONS: --compressed ${{CURL_HEADERS}}
 
 jobs:
   import_to_design_center:
