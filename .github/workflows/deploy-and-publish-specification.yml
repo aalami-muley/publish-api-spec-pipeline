@@ -22,7 +22,7 @@ env:
 
   CURL_BASE_URL: https://eu1.anypoint.mulesoft.com
   CURL_URI: designcenter/api-designer/projects
-  CURL_OPTIONS: "--compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: REQUEST_ORIGIN' -H 'Content-Type: application/json'"
+  CURL_OPTIONS: "--compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: $REQUEST_ORIGIN' -H 'Content-Type: application/json'"
 
 jobs:
   import_to_design_center:
@@ -75,10 +75,8 @@ jobs:
   publish_to_exchange:
     runs-on: ubuntu-latest
     needs: import_to_design_center
-    
-    steps:
-      - uses: actions/checkout@v2
 
+    steps:
       - name: Fetch all projects
         run: |
           curl -s --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}} ${{env.CURL_OPTIONS}} -o projects.json
@@ -92,7 +90,7 @@ jobs:
  
       - name: Publish API to Exchange
         run: |
-          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/publish/exchange ${{env.CURL_OPTIONS}} --data-binary '{ "name": "${{env.PROJECT_NAME}}", "apiVersion": "${{env.API_VERSION}}", "version": "${{env.VERSION}}", "main": "${{env.API_VERSION}}.raml", "classifier": "${{env.CLASSIFIER}}", "assetId": ${{env.PROJECT_NAME}}, "groupId": "${{env.ORGANIZATION_ID}}" }'
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/publish/exchange ${{env.CURL_OPTIONS}} --data-binary '{ "name": "${{env.PROJECT_NAME}}", "apiVersion": "${{env.API_VERSION}}", "version": "${{env.VERSION}}", "main": "${{env.PROJECT_NAME}}.raml", "classifier": "${{env.CLASSIFIER}}", "assetId": ${{env.PROJECT_NAME}}, "groupId": "${{env.ORGANIZATION_ID}}" }'
 
       - name: Release the lock
         run: |
