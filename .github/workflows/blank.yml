@@ -59,7 +59,7 @@ jobs:
           SPEC_CONTENT="${SPEC_CONTENT//'%'/'%25'}"
           SPEC_CONTENT="${SPEC_CONTENT//$'\n'/'%0A'}"
           SPEC_CONTENT="${SPEC_CONTENT//$'\r'/'%0D'}"
-          echo "::set-output name=SPEC_CONTENT::SPEC_CONTENT"
+          echo "::set-output name=SPEC_CONTENT::$SPEC_CONTENT"
       
       - name: Encode specifications file
         id: getJsonEncodedSpecification
