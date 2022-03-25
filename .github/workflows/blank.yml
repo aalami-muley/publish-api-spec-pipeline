@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  TOKEN: b863b161-ba3a-4e9d-9559-33df5e5592c1
+  TOKEN: a99f4095-fa13-4cec-bdca-322804938905
   ORGANIZATION_ID: f60b1434-1059-4f0f-a28c-ccf4a9be05b2
   OWNER_ID: 612cf2dd-9f92-4a08-97ed-f6be4faf06ca
   CLASSIFIER: raml
