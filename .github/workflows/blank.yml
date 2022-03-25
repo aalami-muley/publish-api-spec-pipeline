@@ -73,7 +73,7 @@ jobs:
 
       - name: Fetch all projects
         run: |
-          curl -s --url ${{env.CURL_BASE_URL}}/designcenter/api-designer/projects $CURL_OPTIONS -o projects.json
+          curl -s --url ${{env.CURL_BASE_URL}}/designcenter/api-designer/projects ${{env.CURL_OPTIONS}} -o projects.json
 
       - name: Check if the project is already created
         run: echo "PROJECT_ID=$(cat projects.json | jq '.[] | select(.name == "${{github.event.repository.name}}")' | jq -r .id)" >> $GITHUB_ENV
