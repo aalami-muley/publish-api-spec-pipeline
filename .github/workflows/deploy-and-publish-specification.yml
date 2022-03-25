@@ -1,0 +1,99 @@
+name: Publish API Specification to Design Center and Exchange
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+env:
+  TOKEN: a99f4095-fa13-4cec-bdca-322804938905
+  ORGANIZATION_ID: f60b1434-1059-4f0f-a28c-ccf4a9be05b2
+  OWNER_ID: 612cf2dd-9f92-4a08-97ed-f6be4faf06ca
+  CLASSIFIER: raml
+  SUBTYPE: 
+  BRANCH: master
+  REQUEST_ORIGIN: "GitHub Pipeline"
+  SPEC: publish-api-spec-pipeline.raml
+
+  PROJECT_NAME: ${{github.event.repository.name}}
+
+  CURL_BASE_URL: https://eu1.anypoint.mulesoft.com
+  CURL_URI: designcenter/api-designer/projects
+  CURL_OPTIONS: "--compressed -H 'Authorization: Bearer $TOKEN' -H 'x-organization-id: $ORGANIZATION_ID' -H 'x-owner-id: $OWNER_ID' -H 'Accept: application/json' -H 'x-origin: REQUEST_ORIGIN' -H 'Content-Type: application/json'"
+
+jobs:
+  import_to_design_center:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Fetch all projects
+        run: |
+          curl -s --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}} ${{env.CURL_OPTIONS}} -o projects.json
+
+      - name: Check if the project is already created
+        run: echo "PROJECT_ID=$(cat projects.json | jq '.[] | select(.name == "${{github.event.repository.name}}")' | jq -r .id)" >> $GITHUB_ENV
+          
+      - name: Create the project
+        shell: bash
+        run: |
+          if [ "$PROJECT_ID" == "" ]; then
+            echo "PROJECT_ID=$(curl -s --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}} ${{env.CURL_OPTIONS}} --data-binary '{ "name": "${{github.event.repository.name}}", "classifier": "${{env.CLASSIFIER}}", "subType": "${{env.SUBTYPE}}" }' | jq -r .id)" >> $GITHUB_ENV
+          fi
+        env:
+          PROJECT_ID: ${{ env.PROJECT_ID}}
+
+      - name: Acquire a lock
+        run: |
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/acquireLock ${{env.CURL_OPTIONS}} --data-binary '{}'
+      
+      - name: Get specifications file
+        id: getSpecificationContent
+        run: |
+          SPEC_CONTENT=$(cat ${{ github.workspace }}/${{env.SPEC}})
+          SPEC_CONTENT="${SPEC_CONTENT//'%'/'%25'}"
+          SPEC_CONTENT="${SPEC_CONTENT//$'\n'/'%0A'}"
+          SPEC_CONTENT="${SPEC_CONTENT//$'\r'/'%0D'}"
+          echo "::set-output name=SPEC_CONTENT::$SPEC_CONTENT"
+      
+      - name: Encode specifications file
+        id: getJsonEncodedSpecification
+        run: echo "::set-output name=SPEC_ENCODED_CONTENT::${{toJSON(steps.getSpecificationContent.outputs.SPEC_CONTENT)}}"
+
+      - name: Add the main specification file
+        run: |
+          curl -s -X POST --url "${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/save?commit=true&message=CommitedByPipeline" ${{env.CURL_OPTIONS}} --data-binary '[{"path": "${{env.SPEC}}", "type": "FILE", "content": ${{toJSON(steps.getSpecificationContent.outputs.SPEC_CONTENT)}}}, {"path": "exchange.json", "type": "FILE", "content": "{\"dependencies\":[],\"main\":\"${{env.SPEC}}\"}"}]'
+
+      - name: Release the lock
+        run: |
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/releaseLock ${{env.CURL_OPTIONS}} --data-binary '{}'
+
+  publish_to_exchange:
+    runs-on: ubuntu-latest
+    needs: import_to_design_center
+    
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Fetch all projects
+        run: |
+          curl -s --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}} ${{env.CURL_OPTIONS}} -o projects.json
+
+      - name: Check if the project is already created
+        run: echo "PROJECT_ID=$(cat projects.json | jq '.[] | select(.name == "${{github.event.repository.name}}")' | jq -r .id)" >> $GITHUB_ENV
+
+      - name: Acquire a lock
+        run: |
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/acquireLock ${{env.CURL_OPTIONS}} --data-binary '{}'
+ 
+      - name: Publish API to Exchange
+        run: |
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/publish/exchange ${{env.CURL_OPTIONS}} --data-binary '{ "name": "${{env.PROJECT_NAME}}", "apiVersion": "${{env.API_VERSION}}", "version": "${{env.VERSION}}", "main": "${{env.API_VERSION}}.raml", "classifier": "${{env.CLASSIFIER}}", "assetId": ${{env.PROJECT_NAME}}, "groupId": "${{env.ORGANIZATION_ID}}" }'
+
+      - name: Release the lock
+        run: |
+          curl -s -X POST --url ${{env.CURL_BASE_URL}}/${{env.CURL_URI}}/${{env.PROJECT_ID}}/branches/${{env.BRANCH}}/releaseLock ${{env.CURL_OPTIONS}} --data-binary '{}'
